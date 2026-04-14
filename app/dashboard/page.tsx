@@ -1,57 +1,77 @@
-import { Plus, Monitor } from "lucide-react"
-import { Button } from "@/components/ui/button"
+"use client"
 
-export default function HomePage() {
+import { useState } from "react"
+import Link from "next/link"
+import { Plus, Monitor, Search, Filter } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { StudyTable } from "@/components/dashboard/study-table"
+
+export default function DashboardPage() {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [modalityFilter, setModalityFilter] = useState("All Modalities")
+
   return (
-    <div className="space-y-10 pb-20 md:pb-0">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back to RadiantView. Here is an overview of today&apos;s activity.</p>
+    <div className="space-y-8 pb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold tracking-tight">Worklist</h1>
+          <p className="text-muted-foreground">Manage and review incoming diagnostic studies.</p>
+        </div>
+
+        {/* Quick Action Hubs */}
+        <div className="flex items-center gap-6">
+          <Link href="/dashboard" className="flex flex-col items-center gap-2 group cursor-pointer">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-card border-2 border-primary/20 group-hover:border-primary group-hover:bg-primary/10 text-primary transition-all duration-300 shadow-[0_0_15px_rgba(45,212,191,0.1)] group-hover:shadow-[0_0_25px_rgba(45,212,191,0.2)]">
+              <Plus className="size-7" />
+            </div>
+            <span className="text-xs font-bold tracking-wider uppercase opacity-80 group-hover:opacity-100 transition-opacity">New Order</span>
+          </Link>
+          
+          <Link href="/viewer" className="flex flex-col items-center gap-2 group cursor-pointer">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-card border-2 border-primary/20 group-hover:border-primary group-hover:bg-primary/10 text-primary transition-all duration-300 shadow-[0_0_15px_rgba(45,212,191,0.1)] group-hover:shadow-[0_0_25px_rgba(45,212,191,0.2)]">
+              <Monitor className="size-7" />
+            </div>
+            <span className="text-xs font-bold tracking-wider uppercase opacity-80 group-hover:opacity-100 transition-opacity">Viewer</span>
+          </Link>
+        </div>
       </div>
 
-      {/* Quick Action Hubs */}
-      <div className="flex flex-wrap justify-center md:justify-start gap-8">
-        <div className="flex flex-col items-center gap-3 group">
-          <Button 
-            className="h-24 w-24 rounded-full bg-card border-2 border-primary/20 hover:border-primary hover:bg-primary/10 text-primary transition-all duration-300 shadow-[0_0_20px_rgba(45,212,191,0.1)] hover:shadow-[0_0_30px_rgba(45,212,191,0.2)]"
-            variant="outline"
-          >
-            <Plus className="size-10" />
+      {/* Filters and Search */}
+      <div className="flex flex-col md:flex-row gap-4 items-end md:items-center justify-between bg-card/50 p-4 rounded-xl border border-border/50">
+        <div className="flex flex-1 items-center gap-2 w-full md:max-w-md">
+          <div className="relative w-full">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search by Patient Name, ID, or Accession..."
+              className="w-full pl-9 bg-background border-border/50 focus-visible:ring-primary/50"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Button variant="outline" size="icon" className="shrink-0 border-border/50">
+            <Filter className="size-4" />
           </Button>
-          <span className="text-sm font-semibold tracking-wide">New Order</span>
         </div>
         
-        <div className="flex flex-col items-center gap-3 group">
-          <Button 
-            className="h-24 w-24 rounded-full bg-card border-2 border-primary/20 hover:border-primary hover:bg-primary/10 text-primary transition-all duration-300 shadow-[0_0_20px_rgba(45,212,191,0.1)] hover:shadow-[0_0_30px_rgba(45,212,191,0.2)]"
-            variant="outline"
-          >
-            <Monitor className="size-10" />
-          </Button>
-          <span className="text-sm font-semibold tracking-wide">Image Viewer</span>
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
+          {["All Modalities", "CR", "CT", "MR", "US"].map((m) => (
+            <Button 
+              key={m} 
+              variant="ghost" 
+              size="sm" 
+              className={m === modalityFilter ? "bg-primary/10 text-primary" : "text-muted-foreground"}
+              onClick={() => setModalityFilter(m)}
+            >
+              {m}
+            </Button>
+          ))}
         </div>
       </div>
-      
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: "Total Studies", value: "1,284", change: "+12%" },
-          { label: "Pending Reports", value: "43", change: "-5%" },
-          { label: "Active Clinicians", value: "12", change: "+2" },
-          { label: "System Status", value: "Optimal", change: "100%" },
-        ].map((stat, i) => (
-          <div key={i} className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-            <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-            <div className="flex items-baseline gap-2 mt-2">
-              <h2 className="text-2xl font-bold">{stat.value}</h2>
-              <span className="text-xs font-medium text-primary">{stat.change}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm h-64 flex items-center justify-center border-dashed">
-        <p className="text-muted-foreground">Recent Activity Chart Placeholder</p>
-      </div>
+
+      {/* Main Worklist Table */}
+      <StudyTable searchQuery={searchQuery} modalityFilter={modalityFilter} />
     </div>
   );
 }
