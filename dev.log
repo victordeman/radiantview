@@ -1,0 +1,28 @@
+
+> radiantview@0.1.0 dev
+> next dev --turbopack --port 3001
+
+   ▲ Next.js 15.5.15 (Turbopack)
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.0.2:3001
+
+ ✓ Starting...
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 782ms
+ ✓ Ready in 2.3s
+[31m[auth][error][0m MissingSecret: Please define a `secret`. Read more at https://errors.authjs.dev#missingsecret
+    at assertConfig (/app/.next/server/edge/chunks/97170_@auth_core_8e60f9f3._.js:513:16)
+    at Auth (/app/.next/server/edge/chunks/97170_@auth_core_8e60f9f3._.js:5331:242)
+ ○ Compiling /login ...
+ ✓ Compiled /login in 6.5s
+ GET /login 200 in 7745ms
+[31m[auth][error][0m MissingSecret: Please define a `secret`. Read more at https://errors.authjs.dev#missingsecret
+    at assertConfig (/app/.next/server/edge/chunks/97170_@auth_core_8e60f9f3._.js:513:16)
+    at Auth (/app/.next/server/edge/chunks/97170_@auth_core_8e60f9f3._.js:5331:242)
+ GET /login 200 in 265ms
+[31m[auth][error][0m MissingSecret: Please define a `secret`. Read more at https://errors.authjs.dev#missingsecret
+    at assertConfig (/app/.next/server/edge/chunks/97170_@auth_core_8e60f9f3._.js:513:16)
+    at Auth (/app/.next/server/edge/chunks/97170_@auth_core_8e60f9f3._.js:5331:242)
+ ○ Compiling /register ...
+ ✓ Compiled /register in 1060ms
+ GET /register 200 in 1175ms
