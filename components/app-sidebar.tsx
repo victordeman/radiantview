@@ -1,117 +1,183 @@
 "use client"
 
-import * as React from "react"
+import { useEffect, useState } from "react"
+import { MoreHorizontal, Eye } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
-  Home,
-  ListTodo,
-  Users,
-  Calendar,
-  FileText,
-  Monitor,
-  BarChart3,
-  ShieldCheck,
-  LayoutDashboard,
-  LogOut,
-  User
-} from "lucide-react"
-
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar"
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton"
 
-const items = [
-  {
-    title: "Home",
-    url: "/",
-    icon: Home,
-  },
-  {
-    title: "Worklist",
-    url: "/worklist",
-    icon: ListTodo,
-  },
-  {
-    title: "Patients",
-    url: "/patients",
-    icon: Users,
-  },
-  {
-    title: "Schedule",
-    url: "/schedule",
-    icon: Calendar,
-  },
-  {
-    title: "Reports",
-    url: "/reports",
-    icon: FileText,
-  },
-  {
-    title: "Viewer",
-    url: "/viewer",
-    icon: Monitor,
-  },
-  {
-    title: "Analytics",
-    url: "/analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "Admin",
-    url: "/admin",
-    icon: ShieldCheck,
-  },
-]
+interface Study {
+  id: string
+  patientName: string
+  patientId: string
+  modality: string
+  studyDate: string
+  studyDescription: string
+  status: string
+  instanceCount: number
+}
 
-export function AppSidebar() {
-  const { state } = useSidebar()
+interface StudyTableProps {
+  searchQuery: string
+  modalityFilter: string
+}
+
+export function StudyTable({ searchQuery, modalityFilter }: StudyTableProps) {
+  const [studies, setStudies] = useState<Study[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchStudies() {
+      try {
+        const response = await fetch("/api/studies")
+        if (response.ok) {
+          const data = await response.json()
+          setStudies(data)
+        }
+      } catch (error) {
+        console.error("Failed to fetch studies:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStudies()
+  }, [])
+
+  const filteredStudies = studies.filter((study) => {
+    const matchesSearch = 
+      study.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      study.patientId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      study.studyDescription.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    const matchesModality = 
+      modalityFilter === "All Modalities" || 
+      study.modality.includes(modalityFilter)
+
+    return matchesSearch && matchesModality
+  })
+
+  const getStatusBadge = (status: string, id: string) => {
+    const statuses = ["In Progress", "Completed", "Urgent"]
+    const mockStatus = statuses[id.length % 3] 
+    
+    switch (mockStatus) {
+      case "Urgent":
+        return <Badge variant="destructive">Urgent</Badge>
+      case "Completed":
+        return <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">Completed</Badge>
+      case "In Progress":
+        return <Badge variant="secondary" className="bg-sky-500/10 text-sky-500 border-sky-500/20">In Progress</Badge>
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
+  }
+
+  const getPriorityBadge = (id: string) => {
+    const priorities = ["STAT", "High", "Routine"]
+    const priority = priorities[id.length % 3]
+    
+    switch (priority) {
+      case "STAT":
+        return <span className="text-destructive font-bold text-xs">STAT</span>
+      case "High":
+        return <span className="text-orange-500 font-semibold text-xs">High</span>
+      default:
+        return <span className="text-muted-foreground text-xs">Routine</span>
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-20 w-full" />
+      </div>
+    )
+  }
 
   return (
-    <Sidebar collapsible="icon" className="hidden md:flex">
-      <SidebarHeader className="border-b border-border/50 p-4">
-        <div className="flex items-center gap-2 overflow-hidden">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[0_0_15px_rgba(45,212,191,0.3)]">
-            <LayoutDashboard className="size-4" />
-          </div>
-          {state === "expanded" && (
-            <span className="font-bold text-xl tracking-tight text-foreground">RadiantView</span>
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <Table>
+        <TableHeader className="bg-muted/50">
+          <TableRow>
+            <TableHead className="w-[250px]">Patient</TableHead>
+            <TableHead>Modality</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Priority</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredStudies.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                No studies found.
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredStudies.map((study) => (
+              <TableRow key={study.id} className="hover:bg-muted/50 transition-colors">
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-foreground">{study.patientName}</span>
+                    <span className="text-xs text-muted-foreground">{study.patientId}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="font-mono">{study.modality}</Badge>
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {study.studyDate ? new Date(study.studyDate.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')).toLocaleDateString() : "N/A"}
+                </TableCell>
+                <TableCell>
+                  {getStatusBadge(study.status, study.id)}
+                </TableCell>
+                <TableCell>
+                  {getPriorityBadge(study.id)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-primary hover:text-primary hover:bg-primary/10">
+                      <Eye className="size-4" />
+                      <span>View Images</span>
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8" />}>
+                          <MoreHorizontal className="size-4" />
+                          <span className="sr-only">Open menu</span>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                        <DropdownMenuItem>Edit Metadata</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">Delete Study</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
           )}
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu className="p-2 gap-1">
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title} render={<a href={item.url} />}>
-                  <item.icon className="size-4" />
-                  <span>{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter className="border-t border-border/50 p-2">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="User Profile">
-              <User className="size-4" />
-              <span>Profile</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Logout">
-              <LogOut className="size-4" />
-              <span>Logout</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+        </TableBody>
+      </Table>
+    </div>
   )
 }
