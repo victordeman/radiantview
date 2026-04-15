@@ -10,26 +10,35 @@ export async function registerUser(values: {
   name: string;
   role: string;
 }) {
-  const { email, password, name, role } = values;
+  try {
+    const { email, password, name, role } = values;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+    if (!email || !password || !name || !role) {
+      return { error: "All fields are required." };
+    }
 
-  const existingUser = await db.user.findUnique({
-    where: { email },
-  });
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  if (existingUser) {
-    return { error: "Email already in use!" };
+    const existingUser = await db.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return { error: "Email already in use!" };
+    }
+
+    await db.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: role as UserRole,
+      },
+    });
+
+    return { success: "User created!" };
+  } catch (error) {
+    console.error("[REGISTER_USER]", error);
+    return { error: "Registration failed. Please try again later." };
   }
-
-  await db.user.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-      role: role as UserRole,
-    },
-  });
-
-  return { success: "User created!" };
 }
