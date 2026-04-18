@@ -25,6 +25,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
@@ -130,18 +131,20 @@ export function ViewerToolbar() {
           <ChevronDown className="size-3" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Window/Level Presets</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {windowPresets.map((preset) => (
-            <DropdownMenuItem key={preset.name}>
-              <span>{preset.name}</span>
-              {preset.ww > 0 && (
-                <span className="ml-auto text-xs text-muted-foreground">
-                  W:{preset.ww} L:{preset.wl}
-                </span>
-              )}
-            </DropdownMenuItem>
-          ))}
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Window/Level Presets</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {windowPresets.map((preset) => (
+              <DropdownMenuItem key={preset.name}>
+                <span>{preset.name}</span>
+                {preset.ww > 0 && (
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    W:{preset.ww} L:{preset.wl}
+                  </span>
+                )}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -201,17 +204,19 @@ export function ViewerToolbar() {
           <ChevronDown className="size-3" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Viewport Layout</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {layoutOptions.map((layout) => (
-            <DropdownMenuItem
-              key={layout.name}
-              onClick={() => setActiveLayout(layout.name)}
-            >
-              <Grid2x2 className="size-4 mr-2" />
-              {layout.name}
-            </DropdownMenuItem>
-          ))}
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Viewport Layout</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {layoutOptions.map((layout) => (
+              <DropdownMenuItem
+                key={layout.name}
+                onClick={() => setActiveLayout(layout.name)}
+              >
+                <Grid2x2 className="size-4 mr-2" />
+                {layout.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -227,11 +232,13 @@ export function ViewerToolbar() {
           <ChevronDown className="size-3" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Multi-Planar Reconstruction</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>Axial</DropdownMenuItem>
-          <DropdownMenuItem>Sagittal</DropdownMenuItem>
-          <DropdownMenuItem>Coronal</DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Multi-Planar Reconstruction</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Axial</DropdownMenuItem>
+            <DropdownMenuItem>Sagittal</DropdownMenuItem>
+            <DropdownMenuItem>Coronal</DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -251,11 +258,13 @@ export function ViewerToolbar() {
           <ChevronDown className="size-3" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Hanging Protocols</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {hangingProtocols.map((protocol) => (
-            <DropdownMenuItem key={protocol}>{protocol}</DropdownMenuItem>
-          ))}
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Hanging Protocols</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {hangingProtocols.map((protocol) => (
+              <DropdownMenuItem key={protocol}>{protocol}</DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
