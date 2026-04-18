@@ -69,7 +69,7 @@ export default function ViewerStudyPage() {
       <div className="flex-1 flex overflow-hidden">
         {ohifUrl ? (
           <iframe
-            src={`${ohifUrl}/viewer?StudyInstanceUIDs=${studyUID}`}
+            src={`${ohifUrl}/viewer?StudyInstanceUIDs=${encodeURIComponent(studyUID)}`}
             className="flex-1 border-0"
             title="OHIF DICOM Viewer"
             allow="fullscreen"
