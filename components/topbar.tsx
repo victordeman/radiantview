@@ -1,8 +1,8 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { signOut } from "next-auth/react"
 import { Search, Bell, Plus } from "lucide-react"
+import { logoutUser } from "@/lib/actions/auth"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -77,7 +77,7 @@ export function Topbar() {
             <DropdownMenuGroup>
               <DropdownMenuItem
                 variant="destructive"
-                onClick={() => signOut({ callbackUrl: "/login" })}
+                onClick={() => logoutUser()}
               >
                 Log out
               </DropdownMenuItem>

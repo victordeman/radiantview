@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { usePathname } from "next/navigation"
-import { signOut } from "next-auth/react"
+import { logoutUser } from "@/lib/actions/auth"
 import {
   Home,
   ListTodo,
@@ -122,7 +122,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Logout"
-              onClick={() => signOut({ callbackUrl: "/login" })}
+              onClick={() => logoutUser()}
             >
               <LogOut className="size-4" />
               <span>Logout</span>

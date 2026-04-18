@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { UserRole } from "@prisma/client";
+import { signOut } from "@/auth";
 
 export async function registerUser(values: {
   email: string;
@@ -41,4 +42,8 @@ export async function registerUser(values: {
     console.error("[REGISTER_USER]", error);
     return { error: "Registration failed. Please try again later." };
   }
+}
+
+export async function logoutUser() {
+  await signOut({ redirectTo: "/login" });
 }
