@@ -161,6 +161,7 @@ export default function AdminPage() {
 
   const handleDeleteUser = async () => {
     if (!selectedUser) return
+    setFormError(null)
     setSubmitting(true)
     try {
       const res = await fetch(`/api/users/${selectedUser.id}`, { method: "DELETE" })

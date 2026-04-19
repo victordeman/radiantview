@@ -49,6 +49,19 @@ export async function GET(req: NextRequest) {
       lastUpdate: study.LastUpdate,
     }));
 
+    // Apply client-side search filter if search param provided
+    if (search) {
+      const lowerSearch = search.toLowerCase();
+      const filtered = transformedStudies.filter(
+        (s: { patientName: string; patientId: string; modality: string; studyDescription: string }) =>
+          s.patientName.toLowerCase().includes(lowerSearch) ||
+          s.patientId.toLowerCase().includes(lowerSearch) ||
+          s.modality.toLowerCase().includes(lowerSearch) ||
+          s.studyDescription.toLowerCase().includes(lowerSearch)
+      );
+      return NextResponse.json(filtered);
+    }
+
     return NextResponse.json(transformedStudies);
   } catch (orthancError) {
     console.warn("[STUDIES_GET] Orthanc unavailable, falling back to database:", orthancError);
