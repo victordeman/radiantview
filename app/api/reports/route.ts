@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       });
       if (study) {
         resolvedStudyId = study.id;
-      } else if (!studyId) {
+      } else {
         return NextResponse.json(
           { error: "Study not found in database. Please ensure the study is synced." },
           { status: 404 }
