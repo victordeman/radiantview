@@ -1,7 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { auth } from "@/auth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const search = req.nextUrl.searchParams.get("search");
   const host = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   try {
@@ -48,6 +55,19 @@ export async function GET() {
       lastUpdate: study.LastUpdate,
     }));
 
+    // Apply client-side search filter if search param provided
+    if (search) {
+      const lowerSearch = search.toLowerCase();
+      const filtered = transformedStudies.filter(
+        (s: { patientName: string; patientId: string; modality: string; studyDescription: string }) =>
+          s.patientName.toLowerCase().includes(lowerSearch) ||
+          s.patientId.toLowerCase().includes(lowerSearch) ||
+          s.modality.toLowerCase().includes(lowerSearch) ||
+          s.studyDescription.toLowerCase().includes(lowerSearch)
+      );
+      return NextResponse.json(filtered);
+    }
+
     return NextResponse.json(transformedStudies);
   } catch (orthancError) {
     console.warn("[STUDIES_GET] Orthanc unavailable, falling back to database:", orthancError);
@@ -55,6 +75,16 @@ export async function GET() {
     // Fallback: fetch studies from the local database
     try {
       const dbStudies = await db.study.findMany({
+        where: search
+          ? {
+              OR: [
+                { studyDescription: { contains: search, mode: "insensitive" } },
+                { modality: { contains: search, mode: "insensitive" } },
+                { patient: { name: { contains: search, mode: "insensitive" } } },
+                { patient: { patientId: { contains: search, mode: "insensitive" } } },
+              ],
+            }
+          : undefined,
         include: {
           patient: {
             select: { name: true, patientId: true },

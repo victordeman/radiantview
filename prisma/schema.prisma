@@ -28,6 +28,8 @@ model User {
   role          UserRole  @default(CLINICIAN)
   accounts      Account[]
   sessions      Session[]
+  reports        Report[]
+  reportComments ReportComment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -93,6 +95,7 @@ model Study {
   patientId        String
   patient          Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
   orders           Order[]
+  reports          Report[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -127,4 +130,33 @@ model Order {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Report {
+  id             String          @id @default(cuid())
+  studyId        String
+  study          Study           @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  authorId       String
+  author         User            @relation(fields: [authorId], references: [id])
+  status         String          @default("DRAFT")
+  templateName   String?
+  findings       String?         @db.Text
+  impression     String?         @db.Text
+  recommendation String?         @db.Text
+  signedAt       DateTime?
+  comments       ReportComment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ReportComment {
+  id        String   @id @default(cuid())
+  reportId  String
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  content   String   @db.Text
+
+  createdAt DateTime @default(now())
 }

@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Topbar } from "@/components/topbar";
 import { BottomNav } from "@/components/bottom-nav";
 import { GuidedTour } from "@/components/guided-tour";
+import { ChatPanel } from "@/components/chat-panel";
 
 export default function AuthenticatedLayout({
   children,
@@ -21,6 +22,7 @@ export default function AuthenticatedLayout({
         </div>
         <BottomNav />
         <GuidedTour />
+        <ChatPanel />
       </div>
     </SidebarProvider>
   );
