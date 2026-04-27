@@ -59,6 +59,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const allowedRoles = ["RADIOLOGIST", "CLINICIAN", "TECH", "ADMIN"];
+    if (!allowedRoles.includes(role)) {
+      return NextResponse.json(
+        { error: "Invalid role value" },
+        { status: 400 }
+      );
+    }
+
     const existingUser = await db.user.findUnique({ where: { email } });
     if (existingUser) {
       return NextResponse.json(

@@ -21,6 +21,14 @@ export async function PUT(
     const body = await req.json();
     const { role, name } = body;
 
+    const allowedRoles = ["RADIOLOGIST", "CLINICIAN", "TECH", "ADMIN"];
+    if (role && !allowedRoles.includes(role)) {
+      return NextResponse.json(
+        { error: "Invalid role value" },
+        { status: 400 }
+      );
+    }
+
     const updateData: Record<string, unknown> = {};
     if (role) updateData.role = role;
     if (name) updateData.name = name;

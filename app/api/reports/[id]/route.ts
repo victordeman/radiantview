@@ -58,30 +58,10 @@ export async function PUT(
     }
 
     const { id } = await params;
-
-    // Check if report is finalized before allowing modifications
-    const existingReport = await db.report.findUnique({
-      where: { id },
-      select: { status: true },
-    });
-    if (!existingReport) {
-      return NextResponse.json({ error: "Report not found" }, { status: 404 });
-    }
-    if (existingReport.status === "FINAL") {
-      return NextResponse.json(
-        { error: "Cannot modify a finalized report" },
-        { status: 400 }
-      );
-    }
-
     const body = await req.json();
     const { findings, impression, recommendation, status, templateName } = body;
 
-    const updateData: Record<string, unknown> = {};
-    if (findings !== undefined) updateData.findings = findings;
-    if (impression !== undefined) updateData.impression = impression;
-    if (recommendation !== undefined) updateData.recommendation = recommendation;
-    if (templateName !== undefined) updateData.templateName = templateName;
+    // Validate status before entering transaction
     if (status !== undefined) {
       const allowedStatuses = ["DRAFT", "PRELIMINARY", "FINAL", "AMENDED"];
       if (!allowedStatuses.includes(status)) {
@@ -90,27 +70,57 @@ export async function PUT(
           { status: 400 }
         );
       }
-      updateData.status = status;
-      if (status === "FINAL") {
-        updateData.signedAt = new Date();
-      }
     }
 
-    const report = await db.report.update({
-      where: { id },
-      data: updateData,
-      include: {
-        study: {
-          include: { patient: true },
+    // Use interactive transaction to atomically check status + update
+    const report = await db.$transaction(async (tx) => {
+      const existingReport = await tx.report.findUnique({
+        where: { id },
+        select: { status: true },
+      });
+      if (!existingReport) {
+        throw new Error("NOT_FOUND");
+      }
+      if (existingReport.status === "FINAL") {
+        throw new Error("FINALIZED");
+      }
+
+      const updateData: Record<string, unknown> = {};
+      if (findings !== undefined) updateData.findings = findings;
+      if (impression !== undefined) updateData.impression = impression;
+      if (recommendation !== undefined) updateData.recommendation = recommendation;
+      if (templateName !== undefined) updateData.templateName = templateName;
+      if (status !== undefined) {
+        updateData.status = status;
+        if (status === "FINAL") {
+          updateData.signedAt = new Date();
+        }
+      }
+
+      return tx.report.update({
+        where: { id },
+        data: updateData,
+        include: {
+          study: {
+            include: { patient: true },
+          },
+          author: {
+            select: { id: true, name: true, email: true },
+          },
         },
-        author: {
-          select: { id: true, name: true, email: true },
-        },
-      },
+      });
     });
 
     return NextResponse.json(report);
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "NOT_FOUND") {
+        return NextResponse.json({ error: "Report not found" }, { status: 404 });
+      }
+      if (error.message === "FINALIZED") {
+        return NextResponse.json({ error: "Cannot modify a finalized report" }, { status: 400 });
+      }
+    }
     console.error("[REPORT_PUT]", error);
     return NextResponse.json(
       { error: "Failed to update report" },
@@ -131,25 +141,31 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Prevent deletion of finalized reports
-    const existingReport = await db.report.findUnique({
-      where: { id },
-      select: { status: true },
+    // Use interactive transaction to atomically check status + delete
+    await db.$transaction(async (tx) => {
+      const existingReport = await tx.report.findUnique({
+        where: { id },
+        select: { status: true },
+      });
+      if (!existingReport) {
+        throw new Error("NOT_FOUND");
+      }
+      if (existingReport.status === "FINAL") {
+        throw new Error("FINALIZED");
+      }
+      await tx.report.delete({ where: { id } });
     });
-    if (!existingReport) {
-      return NextResponse.json({ error: "Report not found" }, { status: 404 });
-    }
-    if (existingReport.status === "FINAL") {
-      return NextResponse.json(
-        { error: "Cannot delete a finalized report" },
-        { status: 400 }
-      );
-    }
-
-    await db.report.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "NOT_FOUND") {
+        return NextResponse.json({ error: "Report not found" }, { status: 404 });
+      }
+      if (error.message === "FINALIZED") {
+        return NextResponse.json({ error: "Cannot delete a finalized report" }, { status: 400 });
+      }
+    }
     console.error("[REPORT_DELETE]", error);
     return NextResponse.json(
       { error: "Failed to delete report" },
