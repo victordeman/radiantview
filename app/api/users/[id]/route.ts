@@ -80,23 +80,28 @@ export async function DELETE(
       );
     }
 
-    // Check if user has authored reports or comments
-    const reportCount = await db.report.count({ where: { authorId: id } });
-    const commentCount = await db.reportComment.count({ where: { authorId: id } });
-    if (reportCount > 0 || commentCount > 0) {
-      const parts = [];
-      if (reportCount > 0) parts.push(`${reportCount} report(s)`);
-      if (commentCount > 0) parts.push(`${commentCount} comment(s)`);
-      return NextResponse.json(
-        { error: `Cannot delete user with ${parts.join(" and ")}. Reassign or archive them first.` },
-        { status: 400 }
-      );
-    }
-
-    await db.user.delete({ where: { id } });
+    // Use interactive transaction to atomically check reports/comments + delete
+    await db.$transaction(async (tx) => {
+      const reportCount = await tx.report.count({ where: { authorId: id } });
+      const commentCount = await tx.reportComment.count({ where: { authorId: id } });
+      if (reportCount > 0 || commentCount > 0) {
+        const parts: string[] = [];
+        if (reportCount > 0) parts.push(`${reportCount} report(s)`);
+        if (commentCount > 0) parts.push(`${commentCount} comment(s)`);
+        throw new Error(`HAS_REFERENCES:${parts.join(" and ")}`);
+      }
+      await tx.user.delete({ where: { id } });
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof Error && error.message.startsWith("HAS_REFERENCES:")) {
+      const detail = error.message.replace("HAS_REFERENCES:", "");
+      return NextResponse.json(
+        { error: `Cannot delete user with ${detail}. Reassign or archive them first.` },
+        { status: 400 }
+      );
+    }
     console.error("[USER_DELETE]", error);
     return NextResponse.json(
       { error: "Failed to delete user" },
